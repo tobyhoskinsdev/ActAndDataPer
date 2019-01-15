@@ -11,8 +11,17 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+
+import examples.aaronhoskins.com.actanddataper.utils.StringUtil;
 
 public class MainActivity extends AppCompatActivity {
+    private static final int READ_BLOCK_SIZE = 100;
     TextView tvDisplay;
 
     public static final String TAG = "tag_act_one";
@@ -36,9 +45,62 @@ public class MainActivity extends AppCompatActivity {
         }
         Log.d(TAG, "CREATE");
 
+        MySqlDatabaseHelper mySqlDatabaseHelper = new MySqlDatabaseHelper(this);
+        Person person = new Person("Crazy Eyes", "Unknown", 500);
+        mySqlDatabaseHelper.insertPerson(person);
+        Person crazyEyes = mySqlDatabaseHelper.getPerson("Crazy Eyes");
+        Log.d(TAG, "onCreate: " + crazyEyes.getName());
+        crazyEyes.setGender("Male");
+        mySqlDatabaseHelper.updatePerson(crazyEyes);
+        crazyEyes = mySqlDatabaseHelper.getPerson("Crazy Eyes");
+        Log.d(TAG, "onCreate: " + crazyEyes.getGender());
 
+        WriteBtn();
+        readBtn();
+    }
 
+    // write text to file
+    public void WriteBtn() {
+        // add-write text into file
+        try {
+            FileOutputStream fileout=openFileOutput("mytextfile.txt", MODE_PRIVATE);
+            OutputStreamWriter outputWriter=new OutputStreamWriter(fileout);
+            outputWriter.write("Some info");
+            outputWriter.close();
 
+            //display file saved message
+            Toast.makeText(getBaseContext(), "File saved successfully!",
+                    Toast.LENGTH_SHORT).show();
+            //Toast.makeText(this, "", Toast.LENGTH_SHORT).show();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Read text from file
+    public void readBtn() {
+        //reading text from file
+        try {
+            FileInputStream fileIn=openFileInput("mytextfile.txt");
+            InputStreamReader InputRead= new InputStreamReader(fileIn);
+
+            char[] inputBuffer= new char[READ_BLOCK_SIZE];
+            String s="";
+            int charRead;
+
+            while ((charRead=InputRead.read(inputBuffer))>0) {
+                // char to string conversion
+                String readstring=String.copyValueOf(inputBuffer,0,charRead);
+                s +=readstring;
+            }
+            InputRead.close();
+
+            Toast.makeText(getBaseContext(), s,Toast.LENGTH_SHORT).show();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void onClick(View view) {

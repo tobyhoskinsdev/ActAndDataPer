@@ -23,11 +23,11 @@ public class MySqlDatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        String createQuery = "CREATE TABLE " + TABLE_NAME + "("
+        String createQuery = "CREATE TABLE " + TABLE_NAME + " ("
                 + FIELD_NAME + " TEXT PRIMARY KEY, "
                 + FIELD_GENDER + " TEXT, "
                 + FIELD_AGE + " TEXT)";
-        db.rawQuery(createQuery,null);
+        db.execSQL(createQuery);
 
     }
 
@@ -37,7 +37,7 @@ public class MySqlDatabaseHelper extends SQLiteOpenHelper {
     }
 
     public void insertPerson(Person person) {
-        SQLiteDatabase database = getReadableDatabase();
+        SQLiteDatabase database = this.getReadableDatabase();
         ContentValues contentValues = new ContentValues();
 
         if(person != null) {
@@ -53,7 +53,7 @@ public class MySqlDatabaseHelper extends SQLiteOpenHelper {
         }
     }
     public ArrayList<Person> getAllPeople() {
-        SQLiteDatabase sqLiteDatabase = getReadableDatabase();
+        SQLiteDatabase sqLiteDatabase = this.getReadableDatabase();
         String query = "SELECT * FROM " + TABLE_NAME;
         Cursor cursor = sqLiteDatabase.rawQuery(query, null);
 
@@ -70,5 +70,45 @@ public class MySqlDatabaseHelper extends SQLiteOpenHelper {
             return null;
         }
     }
+
+    public Person getPerson(String passedName) {
+        Person returnPerson = null;
+        if(passedName != null && !passedName.isEmpty()) {
+            SQLiteDatabase sqLiteDatabase = this.getReadableDatabase();
+            String query = "SELECT * FROM " + TABLE_NAME
+                    + " WHERE " + FIELD_NAME + " = \"" + passedName + "\"";
+            Cursor cursor = sqLiteDatabase.rawQuery(query, null);
+            if (cursor.moveToFirst()) {
+                String name = cursor.getString(cursor.getColumnIndex(FIELD_NAME));
+                String gender = cursor.getString(cursor.getColumnIndex(FIELD_GENDER));
+                int age = Integer.parseInt(cursor.getString(cursor.getColumnIndex(FIELD_AGE)));
+                returnPerson = new Person(name, gender, age);
+            }
+            cursor.close();
+        }
+
+        return returnPerson;
+    }
+
+    public int deletePerson(String passedName) {
+        String whereClause = FIELD_NAME + " = \"" + passedName + "\"";
+        SQLiteDatabase sqLiteDatabase = this.getWritableDatabase();
+        return sqLiteDatabase.delete(TABLE_NAME, whereClause , null);
+    }
+
+    public int updatePerson(Person passedPerson) {
+        if(passedPerson != null) {
+            String whereClause = FIELD_NAME + " = \"" + passedPerson.getName() + "\"";
+            SQLiteDatabase sqLiteDatabase = this.getWritableDatabase();
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(FIELD_NAME, passedPerson.getName());
+            contentValues.put(FIELD_GENDER, passedPerson.getGender());
+            contentValues.put(FIELD_AGE, String.valueOf(passedPerson.getAge()));
+            return sqLiteDatabase.update(TABLE_NAME, contentValues, whereClause, null);
+        }
+        return 0;
+    }
+
+
 
 }
